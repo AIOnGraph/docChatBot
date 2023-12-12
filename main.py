@@ -1,7 +1,6 @@
 import streamlit as st
 from response import mains
 import time
-from streamlit_option_menu import option_menu
 
 
 st.markdown("""
