@@ -89,7 +89,5 @@ def pdfuploader(OpenAi_Api_Key, model):
                 
             st.session_state.messages.append({"role": "assistant", "content": full_response})      
 if OpenAPIAI:
-    print(OpenAPIAI)
     if model:
-        print(model)
         pdfuploader(OpenAPIAI,model)
