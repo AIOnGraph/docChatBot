@@ -32,7 +32,7 @@ with st.sidebar:
     st.write('2. Upload a pdf')
     st.write('3. Ask a question about the document💬')
 
-    OpenAPIAI = st.text_input('OpenAI API Key 🔑',placeholder='Paste your key(🔑) here')
+    OpenAPIAI = st.text_input('OpenAI API Key 🔑',placeholder='Paste your key(🔑) here',type='passward')
     if not OpenAPIAI:
         st.warning(body='Kindly enter you API 🔑 in the side bar to chat with us',icon='⚠️')
 
