@@ -14,19 +14,19 @@ Doc Chat is a document-based chat bot that allows users to upload PDF documents,
 2. **Clone the repository:**
       ```bash
         git clone [https://github.com/your_username/doc-chat.git](https://github.com/AIOnGraph/docChatBot.git)https://github.com/AIOnGraph/docChatBot.git
-        cd doc-chat
+        cd docChatBot
         ```
 3. **Install dependencies:**
-
         ```bash
         pip install -r requirements.txt
         ```
 4. **Run the application:**
-
         ```bash
         streamlit run main.py
         ```
-
+5. **Usage:**
+   - Open the provided URL in your browser to access the application.
+     - [[https://health-report-analysis.streamlit.app/](https://health-report-analysis.streamlit.app/)](https://docchatbot.streamlit.app/)
 ## Usage
 
 1. **Enter OpenApiKey in sidebar**
