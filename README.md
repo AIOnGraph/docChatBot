@@ -29,7 +29,11 @@ Doc Chat is a document-based chat bot that allows users to upload PDF documents,
      - [[https://health-report-analysis.streamlit.app/](https://health-report-analysis.streamlit.app/)](https://docchatbot.streamlit.app/)
 ## Usage
 
-1. **Enter OpenApiKey in sidebar**
-2. **Upload PDF document**
-3. **Select GPT model(GPT-3 Turbo or GPT-4)**
-4. **Ask Query:**
+    1. **Enter OpenApiKey in sidebar**
+    2. **Upload PDF document**
+    3. **Select GPT model(GPT-3 Turbo or GPT-4)**
+    4. **Ask Query:**
+
+## Support and Feedback
+
+If you encounter any issues, have feedback, or suggestions, please open an issue on [GitHub]([https://github.com/AIOnGraph/MediVision/issues]
