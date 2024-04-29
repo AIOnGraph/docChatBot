@@ -2,28 +2,10 @@ import streamlit as st
 from response import mains
 import time
 
+st.set_page_config(initial_sidebar_state='collapsed',layout='wide')
+st.title('**📖Dive**')
+subheading = st.subheader('Enter an API key in the sidebar to to chat with your document.',divider=True)
 
-st.markdown("""
-<style>
-     [data-testid=stSidebarContent]{
-        background-color: black;
-            color: white;
-    }
-            
-</style>
-""", unsafe_allow_html=True)
-
-
-st.markdown("""
-<style>
-     [data-testid=stApp]{
-        background-color: grey;
-            color: White;
-    }
-            
-</style>
-""", unsafe_allow_html=True)
-st.title('📖Dive')
 
 
 with st.sidebar:
@@ -32,17 +14,14 @@ with st.sidebar:
     st.write('2. Upload a pdf')
     st.write('3. Ask a question about the document💬')
 
-    OpenAPIAI = st.text_input('OpenAI API Key 🔑',placeholder='Paste your key(🔑) here')
+    OpenAPIAI = st.text_input('OpenAI API Key 🔑',placeholder='Paste your key(🔑) here',type='password')
     if not OpenAPIAI:
         st.warning(body='Kindly enter you API 🔑 in the side bar to chat with us',icon='⚠️')
 
     
 
 
-# with st.expander('Select Model'):
-model=st.selectbox('Select Model',['gpt-3.5-turbo','gpt-4'])
-if not model:
-    st.warning(body='Select the model to chat',icon='⚠️')
+
     
 
 def pdfuploader(OpenAi_Api_Key, model):
@@ -59,7 +38,6 @@ def pdfuploader(OpenAi_Api_Key, model):
                     st.warning(f'File {pdf.name} has already been uploaded.')
                     break
 
-        # Display chat messages from history on app rerun
         if "messages" not in st.session_state:
             st.session_state.messages = []
 
@@ -68,19 +46,15 @@ def pdfuploader(OpenAi_Api_Key, model):
                 st.markdown(message["content"])
 
         if prompt := st.chat_input("Ask Query?"):
-            # Add user message to chat history
             st.session_state.messages.append({"role": "user", "content": prompt})            
-            # Display user message in chat message container
             with st.chat_message("user"):
                 st.markdown(prompt)            
             with st.spinner(text="Thinking..."):
                 response = mains(pdfs=pdfs, query=prompt, OpenAi_Api_Key=OpenAi_Api_Key, model=model)                
                 print(response)
-            # Display assistant response in chat message container
             with st.chat_message(name="assistant"):
                 message_placeholder = st.empty()
                 full_response = ""
-                print(type(response), 1111111111, response)
                 for chunk in response.split():
                     full_response += chunk + " "
                     time.sleep(0.05)
@@ -88,6 +62,12 @@ def pdfuploader(OpenAi_Api_Key, model):
                 message_placeholder.markdown(full_response)
                 
             st.session_state.messages.append({"role": "assistant", "content": full_response})      
+
+
+
 if OpenAPIAI:
-    if model:
-        pdfuploader(OpenAPIAI,model)
+    subheading.empty()
+    model=st.selectbox('Select Model',['gpt-3.5-turbo','gpt-4'])
+    if not model:
+        st.warning(body='Select the model to chat',icon='⚠️')
+    pdfuploader(OpenAPIAI,model)
