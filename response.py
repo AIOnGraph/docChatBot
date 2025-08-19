@@ -1,50 +1,74 @@
-import streamlit as st
 from PyPDF2 import PdfReader
-from langchain.text_splitter import  RecursiveCharacterTextSplitter
-from langchain.embeddings.sentence_transformer import SentenceTransformerEmbeddings
-from langchain.vectorstores.chroma import Chroma
-from langchain.chains.question_answering import load_qa_chain
-from langchain.chat_models import ChatOpenAI
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import Chroma
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_core.prompts import ChatPromptTemplate
 from openai import AuthenticationError
+import streamlit as st
 import sys
 
-
+# --- Fix sqlite issue for Chroma on some environments ---
 sys.modules['sqlite3'] = __import__('pysqlite3')
 
+
+# ---- PDF to Text ----
 def pdfText(pdfs):
-    text = ''
+    text = ""
     for pdf in pdfs:
-        pdf_reader = PdfReader(pdf)
-        for page_num in range(len(pdf_reader.pages)):
-            text += pdf_reader.pages[page_num].extract_text()
+        reader = PdfReader(pdf)
+        for page in reader.pages:
+            if page.extract_text():
+                text += page.extract_text()
     return text
 
-def splitText(text_from_pdf):
-    textSpliter = RecursiveCharacterTextSplitter(
-        chunk_size=500, chunk_overlap=100)
-    Split_Text = textSpliter.split_text(text_from_pdf)
-    return Split_Text
 
-def vectorDataBaseEmbedding(splitedText, query):
-    embed = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
-    VectorDataBase = Chroma.from_texts(splitedText, embed)
-    docs = VectorDataBase.similarity_search(query, k=5)
+# ---- Split Text ----
+def splitText(text_from_pdf):
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=500,
+        chunk_overlap=100
+    )
+    return splitter.split_text(text_from_pdf)
+
+
+# ---- Embedding + Vector DB ----
+def vectorDataBaseEmbedding(splitedText, query, api_key):
+    embed = OpenAIEmbeddings(model="text-embedding-3-small", api_key=api_key)
+    db = Chroma.from_texts(splitedText, embed)
+    docs = db.similarity_search(query, k=5)
     return docs
 
-def chain(vector, query, OpenAi_Api_Key, model):
-    try:
-        chat = ChatOpenAI(api_key=OpenAi_Api_Key, temperature=0.0, model=model)
-        chain = load_qa_chain(llm=chat, chain_type='stuff', verbose=True)
-        response = chain.run({'input_documents': vector, 'question': query})
-        return response
-    except AuthenticationError:
-        st.warning(
-            body='AuthenticationError : Please provide correct api key 🔑' ,icon='🤖')
-        return ""
 
-def mains(pdfs, query, OpenAi_Api_Key, model):
-    text_from_pdf = pdfText(pdfs)
-    splitedText = splitText(text_from_pdf)
-    vector = vectorDataBaseEmbedding(splitedText, query)
-    getresponse = chain(vector, query, OpenAi_Api_Key, model)
-    return getresponse
+# ---- Main Pipeline (LCEL) ----
+def mains_stream_lcel(pdfs, query, api_key, model, container):
+    try:
+        # 1. Extract + split
+        text = pdfText(pdfs)
+        chunks = splitText(text)
+
+        # 2. Embed + retrieve
+        docs = vectorDataBaseEmbedding(chunks, query, api_key)
+        context = "\n\n".join(d.page_content for d in docs)
+
+        # 3. Build LCEL pipeline
+        prompt = ChatPromptTemplate.from_template(
+            "Answer the question based only on the following context:\n{context}\n\nQuestion: {question}"
+        )
+        llm = ChatOpenAI(api_key=api_key, model=model, temperature=0.2, streaming=True)
+        chain = prompt | llm   # no parser
+
+        # 4. Stream results
+        inputs = {"context": context, "question": query}
+        full_response = ""
+        for chunk in chain.stream(inputs):
+            print(chunk,"chunk")
+            if chunk.content:   # AIMessageChunk
+                full_response += chunk.content
+                container.markdown(full_response + "▌")
+
+        container.markdown(full_response)  # Final flush
+        return full_response
+
+    except AuthenticationError:
+        st.warning("AuthenticationError : Please provide correct API key 🔑", icon="🤖")
+        return ""
